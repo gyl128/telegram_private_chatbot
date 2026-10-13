@@ -2,6 +2,9 @@ name = "telegram_private_chatbot"
 main = "worker.js"
 compatibility_date = "2024-11-30"
 
+[vars]
+SUPERGROUP_ID = "-1004417774560"
+
 # Cloudflare KV namespace binding
 [[kv_namespaces]]
 binding = "TOPIC_MAP"
