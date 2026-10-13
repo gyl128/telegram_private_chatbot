@@ -88,8 +88,9 @@ This is the simplest automated deployment method. Cloudflare will automatically 
         * Go back to the Worker's Variables page, scroll down to **KV Namespace Bindings**.
         * Click **Add binding**, set Variable name to `TOPIC_MAP` (must be uppercase), and select the Namespace you just created.
     * **Add Environment Variables**:
-        * `BOT_TOKEN`: Your bot token.
+        * `BOT_TOKEN`: Store the newly generated bot token as a Cloudflare **Secret**.
         * `SUPERGROUP_ID`: Your group ID (e.g., -100123...).
+        * `SECRET_TOKEN`: Store the webhook secret as a Cloudflare **Secret**. The Worker validates Telegram's webhook header.
 8.  **Final Step**: After configuration, go to the **Deployments** tab at the top, find the latest deployment record, and click **Retry deployment** on the right to apply variables.
 
 ### Method 2: Manual Deployment (Simple & Direct)
@@ -104,20 +105,23 @@ If you don't want to link GitHub, you can copy the code directly.
 6.  **Configure KV & Variables**:
     * Go to **Settings** -> **Variables**.
     * Add KV Binding: Variable name `TOPIC_MAP`, bind to a KV database.
-    * Add Environment Variables: `BOT_TOKEN` and `SUPERGROUP_ID`.
+    * Add `BOT_TOKEN` and `SECRET_TOKEN` as **Secrets**, and `SUPERGROUP_ID` as a regular variable.
     * Click **Save and Deploy**.
 
 ---
 
 ### Final Step: Activate Webhook (Crucial)
 
-Regardless of the deployment method, you must manually tell Telegram your Worker address. Visit the following URL in your browser **strictly in order**:
+Regardless of the deployment method, you must tell Telegram your Worker address. Send the following POST request from a local terminal; **do not put the real token in a browser URL**:
 
- **Set New Webhook**:
+ **Set New Webhook**: Include `secret_token`; the Worker will reject Telegram requests without the matching header. Enter the token and secret locally. Do not put real values in a browser URL, GitHub, or chat.
     ```
-    [https://api.telegram.org/bot](https://api.telegram.org/bot)<YOUR_TOKEN>/setWebhook?url=<YOUR_WORKER_URL>
+    POST https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook
+    url=<YOUR_WORKER_URL>
+    secret_token=<YOUR_SECRET_TOKEN>
+    allowed_updates=["message","callback_query"]
     ```
-    *Replace `<YOUR_TOKEN>` with your bot token, and `<YOUR_WORKER_URL>` with your Worker's full domain or custom domain (e.g., `https://xxx.workers.dev`).*
+    *Replace the placeholders locally. The Worker URL is usually `https://<worker>.<subdomain>.workers.dev`.*
 
 If it returns `{"ok":true, "result":true, "description":"Webhook was set"}`, the deployment is successful!
 

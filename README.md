@@ -110,8 +110,9 @@ v4.0 版本移除了所有不稳定的外部 API 依赖，专注于**极致的�
         * 回到 Worker 的 Variables 页面，向下滚动到 **KV Namespace Bindings**。
         * 点击 **Add binding**，变量名填写 `TOPIC_MAP` (必须全大写)，Namespace 选择刚才创建的那个。
     * **添加环境变量**：
-        * `BOT_TOKEN`: 你的机器人 Token。
+        * `BOT_TOKEN`：使用 Cloudflare **Secret** 保存新生成的机器人 Token。
         * `SUPERGROUP_ID`: 你的群组 ID (例如 -100123...)。
+        * `SECRET_TOKEN`：使用 Cloudflare **Secret** 保存 Webhook 密钥。Worker 会校验 Telegram 请求头。
 8.  **最后一步**：配置完成后，点击页面顶部的 **Deployments** 标签，找到最新的部署记录，点击右侧的 **Retry deployment** (重新部署)，让变量生效。
 
 ### 方法二：手动复制部署 (简单直接)
@@ -126,22 +127,23 @@ v4.0 版本移除了所有不稳定的外部 API 依赖，专注于**极致的�
 6.  **配置 KV 与变量**：
     * 去 **Settings** -> **Variables**。
     * 添加 KV 绑定：Variable name 填 `TOPIC_MAP`，并绑定一个 KV 数据库。
-    * 添加环境变量：`BOT_TOKEN` 和 `SUPERGROUP_ID`。
+    * 添加 `BOT_TOKEN` 和 `SECRET_TOKEN` 两个 **Secret**，以及普通变量 `SUPERGROUP_ID`。
     * 点击 **Save and Deploy**。
 
 ---
 
 ### 最后一步：激活 Webhook (至关重要)
 
-无论使用哪种部署方式，最后都需要手动告诉 Telegram 你的 Worker 地址。请在浏览器中**严格按顺序**访问以下 URL：
+无论使用哪种部署方式，最后都需要告诉 Telegram 你的 Worker 地址。请从本地终端发送下面的 POST 请求，**不要把真实 Token 放进浏览器地址栏**：
 
- **设置新 Webhook**：
+ **设置新 Webhook**：需要同时提交 `secret_token`，Worker 才会接受 Telegram 的请求。请在本地终端安全输入 Token 和密钥，不要把真实值放进浏览器地址、GitHub 或聊天记录。
     ```
-   (https://api.telegram.org/bot)<YOUR_TOKEN>/setWebhook?url=<YOUR_WORKER_URL>
+   POST https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook
+   url=<YOUR_WORKER_URL>
+   secret_token=<YOUR_SECRET_TOKEN>
+   allowed_updates=["message","callback_query"]
     ```
-    *将 `<YOUR_TOKEN>` 替换为机器人 Token，`<YOUR_WORKER_URL>` 替换为 Worker 的完整域名或者你绑定的自定义的域名 (如 `https://xxx.workers.dev`)。*
-    
- *举例：https://api.telegram.org/bot1234:HUSH2GW/setWebhook?url=https://1234.workers.dev* `<YOUR_TOKEN>前面的bot别删了`
+    *将占位内容替换为本地保存的值；Worker URL 通常是 `https://<worker>.<subdomain>.workers.dev`。*
 
 如果返回 `{"ok":true, "result":true, "description":"Webhook was set"}`，即表示部署成功！
 

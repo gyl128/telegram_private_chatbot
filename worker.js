@@ -376,6 +376,7 @@ export default {
     if (!env.TOPIC_MAP) return new Response("Error: KV 'TOPIC_MAP' not bound.");
     if (!env.BOT_TOKEN) return new Response("Error: BOT_TOKEN not set.");
     if (!env.SUPERGROUP_ID) return new Response("Error: SUPERGROUP_ID not set.");
+    if (!env.SECRET_TOKEN) return new Response("Error: SECRET_TOKEN not set.", { status: 500 });
 
     // 【修复 #7】规范化环境变量，统一为字符串类型
     const normalizedEnv = {
@@ -390,6 +391,11 @@ export default {
     }
 
     if (request.method !== "POST") return new Response("OK");
+
+    const webhookSecret = request.headers.get("X-Telegram-Bot-Api-Secret-Token");
+    if (webhookSecret !== env.SECRET_TOKEN) {
+      return new Response("Unauthorized", { status: 401 });
+    }
 
     // 验证 Content-Type
     const contentType = request.headers.get("content-type") || "";
